@@ -148,7 +148,9 @@ public partial class SpringDbContext : DbContext
 
             entity.HasOne(d => d.Event).WithMany(p => p.TicketCategories)
                 .HasForeignKey(d => d.Eventid)
-                .HasConstraintName("FKpclsgt6dy7y5r1tuntx9sk2a5");
+                .HasConstraintName("FKpclsgt6dy7y5r1tuntx9sk2a5")
+                .OnDelete(DeleteBehavior.Cascade);
+      
         });
 
         modelBuilder.Entity<Venue>(entity =>

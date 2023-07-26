@@ -1,4 +1,5 @@
-﻿using TicketMS.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using TicketMS.Models;
 
 namespace TicketMS.Repositories.Implementation
 {
@@ -16,32 +17,29 @@ namespace TicketMS.Repositories.Implementation
             throw new NotImplementedException();
         }
 
-        public int Delete(int id)
+        public void Delete(Order order)
         {
-            throw new NotImplementedException();
+            _dbContext.Remove(order);
+            _dbContext.SaveChanges();
         }
 
-        public IEnumerable<Order> GetAll()
+        public async Task<IEnumerable<Order>> GetAll()
         {
-            var orders = _dbContext.Orders;
+            var orders = await _dbContext.Orders.ToListAsync();
             return orders;
         }
 
-        public Order GetById(int id)
+        public async Task<Order> GetById(int id)
         {
-            var orders = _dbContext.Orders;
-            var order = orders.Where(o => o.Orderid == id).FirstOrDefault();
-            if(order == null)
-            {
-                return null;
-            }
+            var order = await _dbContext.Orders.Where(o => o.Orderid == id).FirstOrDefaultAsync();
             return order;
 
         }
 
-        public void Update(Order @event)
+        public void Update(Order order)
         {
-            throw new NotImplementedException();
+            _dbContext.Entry(order).State = EntityState.Modified;
+            _dbContext.SaveChanges();
         }
     }
 }

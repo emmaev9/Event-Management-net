@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TicketMS.Models;
 using TicketMS.Models.DTO;
@@ -11,54 +12,76 @@ namespace TicketMS.Controllers
     public class EventController : ControllerBase
     {
         private readonly IEventRepository _eventRepository;
+        private readonly IMapper _mapper;
 
-
-        public EventController(IEventRepository eventRepository)
+        public EventController(IEventRepository eventRepository, IMapper mapper)
         {
-            //     _dbContext = new TicketsDbContext();
             _eventRepository = eventRepository;
+            _mapper = mapper;
        
         }
 
         [HttpGet]
-        public ActionResult<List<EventDTO>> GetAll()
+        public async Task<ActionResult<List<EventDTO>>> GetAll()
         {
-            var events = _eventRepository.GetAll();
-
-            var eventsDto = events.Select(e => new EventDTO()
-            {
-                EventId = e.Eventid,
-                EventName = e.EventName,
-                EventDescription = e.EventDescription ?? string.Empty,
-                EventType = e.EventType?.Name ?? string.Empty,
-                Venue = e.Venue?.Location ?? string.Empty
-            });
+            var events = await _eventRepository.GetAll();
+            var eventsDto = events.Select(e => _mapper.Map<EventDTO>(e));
             return Ok(eventsDto);
         }
 
         [HttpGet]
-        public ActionResult<EventDTO> GetById(int id)
+        public async Task<ActionResult<EventDTO>> GetById(int id)
         {
-            var @event = _eventRepository.GetById(id);
-
+            var @event = await _eventRepository.GetById(id);
             if (@event == null)
             {
                 return NotFound();
             }
+    
+            var eventDto = _mapper.Map<EventDTO>(@event);
+            return Ok(eventDto);
+        }
 
-            var dtoEvent = new EventDTO
+        [HttpPatch]
+        public async Task<ActionResult<EventPatchDTO>> Patch(EventPatchDTO eventPatch)
+        {
+            var eventEntity = await _eventRepository.GetById(eventPatch.EventId);
+            if(eventEntity == null)
             {
-                EventId = @event.Eventid,
-                EventDescription = @event.EventDescription,
-                EventName = @event.EventName,
-                EventType = @event.EventType.Name ?? string.Empty,
-                Venue = @event.Venue?.Location ?? string.Empty
-            };
+                return NotFound();
+            }
 
-            return Ok(dtoEvent);
+            _mapper.Map(eventPatch, eventEntity);
+            _eventRepository.Update(eventEntity);
+            return Ok(eventEntity);
+        }
+
+        [HttpDelete]
+        public async Task<ActionResult> Delete(int id)
+        {
+            var eventEntity = await _eventRepository.GetById(id);
+            if (eventEntity == null)
+            {
+                return NotFound();
+            }
+            Console.WriteLine("delete");
+            _eventRepository.Delete(eventEntity);
+            return NoContent();
+        }
+
+        [HttpPost]
+        public ActionResult<EventAddDTO> Add(EventAddDTO eventDTO)
+        {
+            Event eventToSave = new Event();
+            eventToSave.Eventid = 7; 
+            //TO DO: Modify DB to have auto-incrment on primary keys
+            _mapper.Map(eventDTO,eventToSave);
+            _eventRepository.Add(eventToSave);
+            return NoContent();
         }
     }
 
-}
-//Data Source=DESKTOP-7K2NNPM; Initial Catalog=tickets_db; Persist Security Info=True; User ID=sa; Password=***********
-  //  Scaffold-DbContext "Data Source=DESKTOP-7K2NNPM;Initial Catalog=tickets_db;Integrated Security=True;TrustServerCertificate=True;encrypt=false;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
+
+
+}  
+//  Scaffold-DbContext "Data Source=DESKTOP-7K2NNPM;Initial Catalog=tickets_db;Integrated Security=True;TrustServerCertificate=True;encrypt=false;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models

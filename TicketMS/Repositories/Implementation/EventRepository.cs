@@ -1,4 +1,5 @@
-﻿using TicketMS.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using TicketMS.Models;
 
 namespace TicketMS.Repositories
 {
@@ -11,36 +12,35 @@ namespace TicketMS.Repositories
             _dbContext = new SpringDbContext();
         }
 
-        public int Add(Event @event)
+        public void Add(Event @event)
         {
-            throw new NotImplementedException();
+            _dbContext.Add(@event);
+            _dbContext.SaveChanges();
         }
 
-        public int Delete(int id)
+        public void Delete(Event @event)
         {
-            throw new NotImplementedException();
+                _dbContext.Remove(@event);
+                _dbContext.SaveChanges();
         }
 
-        public IEnumerable<Event> GetAll()
+        public async Task<IEnumerable<Event>> GetAll()
         {
-            var events = _dbContext.Events;
+            var events = await _dbContext.Events.ToListAsync();
             return events;
         }
 
-        public Event GetById(int id)
+        public async Task<Event> GetById(int id)
         {
-            var @event = _dbContext.Events.Where(e => e.Eventid == id).FirstOrDefault();
-            if (@event != null)
-            {
-                return @event;
-            }
-            return null;
+            var @event = await _dbContext.Events.Where(e => e.Eventid == id).FirstOrDefaultAsync();
+            return @event;
            
         }
 
         public void Update(Event @event)
         {
-            throw new NotImplementedException();
+            _dbContext.Entry(@event).State = EntityState.Modified;
+            _dbContext.SaveChanges();
         }
     }
 }

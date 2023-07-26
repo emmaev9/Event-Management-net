@@ -4,14 +4,14 @@ namespace TicketMS.Repositories
 {
     public interface IOrderRepository
     {
-        IEnumerable<Order> GetAll();
+        Task<IEnumerable<Order>> GetAll();
 
-        Order GetById(int id);
+        Task<Order> GetById(int id);
 
-        int Add(Order @event);
+        int Add(Order order);
 
-        void Update(Order @event);
+        void Update(Order order);
 
-        int Delete(int id);
+        void Delete(Order order);
     }
 }
