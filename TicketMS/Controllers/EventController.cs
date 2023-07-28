@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TicketMS.Exceptions;
 using TicketMS.Models;
 using TicketMS.Models.DTO;
 using TicketMS.Repositories;
+using TicketMS.Services;
 
 namespace TicketMS.Controllers
 {
@@ -11,77 +13,48 @@ namespace TicketMS.Controllers
     [ApiController]
     public class EventController : ControllerBase
     {
-        private readonly IEventRepository _eventRepository;
-        private readonly IMapper _mapper;
+        private readonly IEventService _eventService;
+     
 
-        public EventController(IEventRepository eventRepository, IMapper mapper)
+        public EventController(IEventService eventService)
         {
-            _eventRepository = eventRepository;
-            _mapper = mapper;
-       
+            _eventService = eventService;
         }
 
         [HttpGet]
         public async Task<ActionResult<List<EventDTO>>> GetAll()
         {
-            var events = await _eventRepository.GetAll();
-            var eventsDto = events.Select(e => _mapper.Map<EventDTO>(e));
-            return Ok(eventsDto);
+            var events = await _eventService.GetAllAsync();
+            return Ok(events);
         }
 
         [HttpGet]
         public async Task<ActionResult<EventDTO>> GetById(int id)
         {
-            var @event = await _eventRepository.GetById(id);
-            if (@event == null)
-            {
-                return NotFound();
-            }
-    
-            var eventDto = _mapper.Map<EventDTO>(@event);
-            return Ok(eventDto);
+            var @event = await _eventService.GetByIdAsync(id);
+            return Ok(@event);
         }
 
         [HttpPatch]
-        public async Task<ActionResult<EventPatchDTO>> Patch(EventPatchDTO eventPatch)
+        public async Task<ActionResult<EventPatchDTO>> Update(EventPatchDTO eventPatch)
         {
-            var eventEntity = await _eventRepository.GetById(eventPatch.EventId);
-            if(eventEntity == null)
-            {
-                return NotFound();
-            }
-
-            _mapper.Map(eventPatch, eventEntity);
-            _eventRepository.Update(eventEntity);
-            return Ok(eventEntity);
+            var @event = await _eventService.UpdateAsync(eventPatch);
+            return Ok(@event);
         }
 
         [HttpDelete]
         public async Task<ActionResult> Delete(int id)
         {
-            var eventEntity = await _eventRepository.GetById(id);
-            if (eventEntity == null)
-            {
-                return NotFound();
-            }
-            Console.WriteLine("delete");
-            _eventRepository.Delete(eventEntity);
+            await _eventService.DeleteAsync(id);
             return NoContent();
         }
 
         [HttpPost]
-        public ActionResult<EventAddDTO> Add(EventAddDTO eventDTO)
+        public async Task<ActionResult<EventAddDTO>> Add(EventAddDTO eventDTO)
         {
-            Event eventToSave = new Event();
-            eventToSave.Eventid = 7; 
-            //TO DO: Modify DB to have auto-incrment on primary keys
-            _mapper.Map(eventDTO,eventToSave);
-            _eventRepository.Add(eventToSave);
-            return NoContent();
+            Event eventToSave = await _eventService.AddAsync(eventDTO);
+            return CreatedAtAction(nameof(GetById), new { id = eventToSave.Eventid }, eventToSave);
         }
     }
-
-
-
 }  
 //  Scaffold-DbContext "Data Source=DESKTOP-7K2NNPM;Initial Catalog=tickets_db;Integrated Security=True;TrustServerCertificate=True;encrypt=false;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models

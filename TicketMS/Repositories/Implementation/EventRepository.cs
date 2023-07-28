@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TicketMS.Exceptions;
 using TicketMS.Models;
 
 namespace TicketMS.Repositories
@@ -7,40 +8,43 @@ namespace TicketMS.Repositories
     {
         private readonly SpringDbContext _dbContext;
 
-        public EventRepository()
+        public EventRepository(SpringDbContext dbContext )
         {
-            _dbContext = new SpringDbContext();
+            _dbContext = dbContext;
         }
 
-        public void Add(Event @event)
+        public async Task AddAsync(Event @event)
         {
             _dbContext.Add(@event);
-            _dbContext.SaveChanges();
+             await _dbContext.SaveChangesAsync();
         }
 
-        public void Delete(Event @event)
+        public async Task DeleteAsync(Event @event)
         {
                 _dbContext.Remove(@event);
-                _dbContext.SaveChanges();
+                await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Event>> GetAll()
+        public async Task<IEnumerable<Event>> GetAllAsync()
         {
             var events = await _dbContext.Events.ToListAsync();
             return events;
         }
 
-        public async Task<Event> GetById(int id)
+        public async Task<Event> GetByIdAsync(int id)
         {
             var @event = await _dbContext.Events.Where(e => e.Eventid == id).FirstOrDefaultAsync();
+            if(@event == null)
+            {
+                throw new EntityNotFoundException(id, nameof(Event));
+            }
             return @event;
-           
         }
 
-        public void Update(Event @event)
+        public async Task UpdateAsync(Event @event)
         {
             _dbContext.Entry(@event).State = EntityState.Modified;
-            _dbContext.SaveChanges();
+             await _dbContext.SaveChangesAsync();
         }
     }
 }

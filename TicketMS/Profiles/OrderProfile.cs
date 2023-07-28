@@ -10,6 +10,7 @@ namespace TicketMS.Profiles
         {
             CreateMap<OrderDTO, Order>().ReverseMap();
             CreateMap<OrderPatchDTO, Order>().ReverseMap();
+            CreateMap<OrderAddDTO,Order>().ReverseMap();
         }
 
     }

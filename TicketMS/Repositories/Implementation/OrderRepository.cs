@@ -7,39 +7,46 @@ namespace TicketMS.Repositories.Implementation
     {
         private readonly SpringDbContext _dbContext;
 
-        public OrderRepository()
+        public OrderRepository(SpringDbContext context)
         {
-            _dbContext = new SpringDbContext();
+            _dbContext = context;
         }
 
-        public int Add(Order @event)
+        public async Task AddAsync(Order order)
         {
-            throw new NotImplementedException();
-        }
+            _dbContext.Add(order);
+            await _dbContext.SaveChangesAsync();
 
-        public void Delete(Order order)
+        }
+        public void Add(Order order)
         {
-            _dbContext.Remove(order);
+            _dbContext.Add(order);
             _dbContext.SaveChanges();
         }
 
-        public async Task<IEnumerable<Order>> GetAll()
+        public async Task DeleteAsync(Order order)
+        {
+            _dbContext.Remove(order);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Order>> GetAllAsync()
         {
             var orders = await _dbContext.Orders.ToListAsync();
             return orders;
         }
 
-        public async Task<Order> GetById(int id)
+        public async Task<Order> GetByIdAsync(int id)
         {
             var order = await _dbContext.Orders.Where(o => o.Orderid == id).FirstOrDefaultAsync();
             return order;
 
         }
 
-        public void Update(Order order)
+        public async Task UpdateAsync(Order order)
         {
             _dbContext.Entry(order).State = EntityState.Modified;
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

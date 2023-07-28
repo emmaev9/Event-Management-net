@@ -1,9 +1,7 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using TicketMS.Models;
 using TicketMS.Models.DTO;
-using TicketMS.Repositories;
+using TicketMS.Services;
 
 namespace TicketMS.Controllers
 {
@@ -11,33 +9,24 @@ namespace TicketMS.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
-        private readonly IOrderRepository _orderRepository;
-        private readonly IMapper _mapper;
+        private readonly IOrderService _orderService;
 
-        public OrderController(IOrderRepository orderRepository, IMapper mapper)
+        public OrderController(IOrderService orderService)
         {
-            _orderRepository = orderRepository;
-            _mapper = mapper;
+             _orderService = orderService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Order>>> getAllOrders()
+        public async Task<ActionResult<List<Order>>> GetAll()
         {
-            var orders = await _orderRepository.GetAll();
-
-            var ordersDto = orders.Select(e => _mapper.Map<OrderDTO>(e));
-            return Ok(ordersDto);
+            IEnumerable<OrderDTO> allOrders = await _orderService.GetAllOrdersAsync();
+            return Ok(allOrders);
         }
 
         [HttpGet]
-        public async Task<ActionResult<OrderDTO>> getOrderById(int id)
+        public async Task<ActionResult<OrderDTO>> GetById(int id)
         {
-            var order = await _orderRepository.GetById(id);
-            if(order == null)
-            {
-                return NotFound();
-            }
-            var orderDto = _mapper.Map<OrderDTO>(order);
+            var orderDto = await _orderService.GetOrderAsync(id);
             return Ok(orderDto);
         }
 
@@ -45,27 +34,23 @@ namespace TicketMS.Controllers
         [HttpPatch]
         public async Task<ActionResult<OrderPatchDTO>> Patch(OrderPatchDTO orderPatch)
         {
-            var orderEntity = await _orderRepository.GetById(orderPatch.OrderID);
-            if (orderEntity == null)
-            {
-                return NotFound();
-            }
-
-            _mapper.Map(orderPatch, orderEntity);
-            _orderRepository.Update(orderEntity);
-            return Ok(orderEntity);
+            var updatedOrder = await _orderService.UpdateOrderAsync(orderPatch);
+            return Ok(updatedOrder);
         }
 
         [HttpDelete]
         public async Task<ActionResult> Delete(int id)
         {
-            var orderEntity = await _orderRepository.GetById(id);
-            if (orderEntity == null)
-            {
-                return NotFound();
-            }
-            _orderRepository.Delete(orderEntity);
-            return NoContent();
+           await _orderService.DeleteOrderAsync(id);
+           return NoContent();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> AddAsync(OrderAddDTO orderAddDTO)
+        {
+            Order orderSaved =  await _orderService.SaveOrderAsync(orderAddDTO);
+            return CreatedAtAction(nameof(GetById), new { id = orderSaved.Orderid }, orderSaved);
+   
         }
     }
 }

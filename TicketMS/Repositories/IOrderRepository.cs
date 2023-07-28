@@ -4,14 +4,15 @@ namespace TicketMS.Repositories
 {
     public interface IOrderRepository
     {
-        Task<IEnumerable<Order>> GetAll();
+        Task<IEnumerable<Order>> GetAllAsync();
 
-        Task<Order> GetById(int id);
+        Task<Order> GetByIdAsync(int id);
 
-        int Add(Order order);
+        Task AddAsync(Order order);
+        void Add(Order order);  
 
-        void Update(Order order);
+        Task UpdateAsync(Order order);
 
-        void Delete(Order order);
+        Task DeleteAsync(Order order);
     }
 }

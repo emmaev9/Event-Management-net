@@ -1,9 +1,10 @@
 ﻿namespace TicketMS.Models.DTO
 {
-    public class OrderPatchDTO
+    public class OrderAddDTO
     {
-        public int OrderID { get; set; }
+        public int CustomerID { get; set; }
         public int TicketCategoryID { get; set; }
+        public int EventId { get; set; }
         public int NumberOfTickets { get; set; }
     }
 }
