@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TicketMS.Exceptions;
 using TicketMS.Models;
 using TicketMS.Models.DTO;
 using TicketMS.Repositories;
+using TicketMS.Services;
 
 namespace TicketMS.Controllers
 {
@@ -10,55 +13,48 @@ namespace TicketMS.Controllers
     [ApiController]
     public class EventController : ControllerBase
     {
-        private readonly IEventRepository _eventRepository;
+        private readonly IEventService _eventService;
+     
 
-
-        public EventController(IEventRepository eventRepository)
+        public EventController(IEventService eventService)
         {
-            //     _dbContext = new TicketsDbContext();
-            _eventRepository = eventRepository;
-       
+            _eventService = eventService;
         }
 
         [HttpGet]
-        public ActionResult<List<EventDTO>> GetAll()
+        public async Task<ActionResult<List<EventDTO>>> GetAll()
         {
-            var events = _eventRepository.GetAll();
-
-            var eventsDto = events.Select(e => new EventDTO()
-            {
-                EventId = e.Eventid,
-                EventName = e.EventName,
-                EventDescription = e.EventDescription ?? string.Empty,
-                EventType = e.EventType?.Name ?? string.Empty,
-                Venue = e.Venue?.Location ?? string.Empty
-            });
-            return Ok(eventsDto);
+            var events = await _eventService.GetAllAsync();
+            return Ok(events);
         }
 
         [HttpGet]
-        public ActionResult<EventDTO> GetById(int id)
+        public async Task<ActionResult<EventDTO>> GetById(int id)
         {
-            var @event = _eventRepository.GetById(id);
+            var @event = await _eventService.GetByIdAsync(id);
+            return Ok(@event);
+        }
 
-            if (@event == null)
-            {
-                return NotFound();
-            }
+        [HttpPatch]
+        public async Task<ActionResult<EventPatchDTO>> Update(EventPatchDTO eventPatch)
+        {
+            var @event = await _eventService.UpdateAsync(eventPatch);
+            return Ok(@event);
+        }
 
-            var dtoEvent = new EventDTO
-            {
-                EventId = @event.Eventid,
-                EventDescription = @event.EventDescription,
-                EventName = @event.EventName,
-                EventType = @event.EventType.Name ?? string.Empty,
-                Venue = @event.Venue?.Location ?? string.Empty
-            };
+        [HttpDelete]
+        public async Task<ActionResult> Delete(int id)
+        {
+            await _eventService.DeleteAsync(id);
+            return NoContent();
+        }
 
-            return Ok(dtoEvent);
+        [HttpPost]
+        public async Task<ActionResult<EventAddDTO>> Add(EventAddDTO eventDTO)
+        {
+            Event eventToSave = await _eventService.AddAsync(eventDTO);
+            return CreatedAtAction(nameof(GetById), new { id = eventToSave.Eventid }, eventToSave);
         }
     }
-
-}
-//Data Source=DESKTOP-7K2NNPM; Initial Catalog=tickets_db; Persist Security Info=True; User ID=sa; Password=***********
-  //  Scaffold-DbContext "Data Source=DESKTOP-7K2NNPM;Initial Catalog=tickets_db;Integrated Security=True;TrustServerCertificate=True;encrypt=false;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
+}  
+//  Scaffold-DbContext "Data Source=DESKTOP-7K2NNPM;Initial Catalog=tickets_db;Integrated Security=True;TrustServerCertificate=True;encrypt=false;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models

@@ -1,4 +1,5 @@
-﻿using TicketMS.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using TicketMS.Models;
 
 namespace TicketMS.Repositories.Implementation
 {
@@ -6,42 +7,46 @@ namespace TicketMS.Repositories.Implementation
     {
         private readonly SpringDbContext _dbContext;
 
-        public OrderRepository()
+        public OrderRepository(SpringDbContext context)
         {
-            _dbContext = new SpringDbContext();
+            _dbContext = context;
         }
 
-        public int Add(Order @event)
+        public async Task AddAsync(Order order)
         {
-            throw new NotImplementedException();
+            _dbContext.Add(order);
+            await _dbContext.SaveChangesAsync();
+
+        }
+        public void Add(Order order)
+        {
+            _dbContext.Add(order);
+            _dbContext.SaveChanges();
         }
 
-        public int Delete(int id)
+        public async Task DeleteAsync(Order order)
         {
-            throw new NotImplementedException();
+            _dbContext.Remove(order);
+            await _dbContext.SaveChangesAsync();
         }
 
-        public IEnumerable<Order> GetAll()
+        public async Task<IEnumerable<Order>> GetAllAsync()
         {
-            var orders = _dbContext.Orders;
+            var orders = await _dbContext.Orders.ToListAsync();
             return orders;
         }
 
-        public Order GetById(int id)
+        public async Task<Order> GetByIdAsync(int id)
         {
-            var orders = _dbContext.Orders;
-            var order = orders.Where(o => o.Orderid == id).FirstOrDefault();
-            if(order == null)
-            {
-                return null;
-            }
+            var order = await _dbContext.Orders.Where(o => o.Orderid == id).FirstOrDefaultAsync();
             return order;
 
         }
 
-        public void Update(Order @event)
+        public async Task UpdateAsync(Order order)
         {
-            throw new NotImplementedException();
+            _dbContext.Entry(order).State = EntityState.Modified;
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

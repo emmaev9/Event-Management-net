@@ -4,14 +4,14 @@ namespace TicketMS.Repositories
 {
     public interface IEventRepository
     {
-        IEnumerable<Event> GetAll();
+        Task<IEnumerable<Event>> GetAllAsync();
 
-        Event GetById(int id);
+        Task<Event> GetByIdAsync(int id);
 
-        int Add(Event @event);
+        Task AddAsync(Event @event);
 
-        void Update(Event @event);
+        Task UpdateAsync(Event @event);
 
-        int Delete(int id);
+        Task DeleteAsync(Event @event);
     }
 }

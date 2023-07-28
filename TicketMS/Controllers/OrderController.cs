@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using TicketMS.Models;
 using TicketMS.Models.DTO;
-using TicketMS.Repositories;
+using TicketMS.Services;
 
 namespace TicketMS.Controllers
 {
@@ -10,50 +9,48 @@ namespace TicketMS.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
-        private readonly IOrderRepository _orderRepository;
+        private readonly IOrderService _orderService;
 
-        public OrderController(IOrderRepository orderRepository)
+        public OrderController(IOrderService orderService)
         {
-            _orderRepository = orderRepository;
+             _orderService = orderService;
         }
 
         [HttpGet]
-        public ActionResult<List<Order>> getAllOrders()
+        public async Task<ActionResult<List<Order>>> GetAll()
         {
-            var orders = _orderRepository.GetAll();
-
-            var ordersDto = orders.Select(e => new OrderDTO()
-            {
-                OrderID = e.Orderid,
-                CustomerID = e.Customerid ?? 0,
-                NumberOfTickets = e.NumberOfTickets,
-                TicketCategoryID = e.TicketCategoryid ?? 0,
-                OrderAt = e.OrderAt,
-                TotalPrice = e.TotalPrice,
-    
-            }) ;
-            return Ok(ordersDto);
+            IEnumerable<OrderDTO> allOrders = await _orderService.GetAllOrdersAsync();
+            return Ok(allOrders);
         }
 
         [HttpGet]
-        public ActionResult<Order> getOrderById(int id)
+        public async Task<ActionResult<OrderDTO>> GetById(int id)
         {
-            var order = _orderRepository.GetById(id);
-            if(order == null)
-            {
-                return NotFound();
-            }
+            var orderDto = await _orderService.GetOrderAsync(id);
+            return Ok(orderDto);
+        }
 
-            OrderDTO orderDTO = new OrderDTO
-            {
-                OrderID = order.Orderid,
-                CustomerID = order.Customerid ?? 0,
-                TicketCategoryID = order.TicketCategoryid ?? 0,
-                NumberOfTickets = order.NumberOfTickets,
-                TotalPrice = order.TotalPrice,
-                OrderAt = order.OrderAt
-            };
-            return Ok(orderDTO);
+
+        [HttpPatch]
+        public async Task<ActionResult<OrderPatchDTO>> Patch(OrderPatchDTO orderPatch)
+        {
+            var updatedOrder = await _orderService.UpdateOrderAsync(orderPatch);
+            return Ok(updatedOrder);
+        }
+
+        [HttpDelete]
+        public async Task<ActionResult> Delete(int id)
+        {
+           await _orderService.DeleteOrderAsync(id);
+           return NoContent();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> AddAsync(OrderAddDTO orderAddDTO)
+        {
+            Order orderSaved =  await _orderService.SaveOrderAsync(orderAddDTO);
+            return CreatedAtAction(nameof(GetById), new { id = orderSaved.Orderid }, orderSaved);
+   
         }
     }
 }

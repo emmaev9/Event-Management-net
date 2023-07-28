@@ -1,4 +1,6 @@
-﻿using TicketMS.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using TicketMS.Exceptions;
+using TicketMS.Models;
 
 namespace TicketMS.Repositories
 {
@@ -6,41 +8,43 @@ namespace TicketMS.Repositories
     {
         private readonly SpringDbContext _dbContext;
 
-        public EventRepository()
+        public EventRepository(SpringDbContext dbContext )
         {
-            _dbContext = new SpringDbContext();
+            _dbContext = dbContext;
         }
 
-        public int Add(Event @event)
+        public async Task AddAsync(Event @event)
         {
-            throw new NotImplementedException();
+            _dbContext.Add(@event);
+             await _dbContext.SaveChangesAsync();
         }
 
-        public int Delete(int id)
+        public async Task DeleteAsync(Event @event)
         {
-            throw new NotImplementedException();
+                _dbContext.Remove(@event);
+                await _dbContext.SaveChangesAsync();
         }
 
-        public IEnumerable<Event> GetAll()
+        public async Task<IEnumerable<Event>> GetAllAsync()
         {
-            var events = _dbContext.Events;
+            var events = await _dbContext.Events.ToListAsync();
             return events;
         }
 
-        public Event GetById(int id)
+        public async Task<Event> GetByIdAsync(int id)
         {
-            var @event = _dbContext.Events.Where(e => e.Eventid == id).FirstOrDefault();
-            if (@event != null)
+            var @event = await _dbContext.Events.Where(e => e.Eventid == id).FirstOrDefaultAsync();
+            if(@event == null)
             {
-                return @event;
+                throw new EntityNotFoundException(id, nameof(Event));
             }
-            return null;
-           
+            return @event;
         }
 
-        public void Update(Event @event)
+        public async Task UpdateAsync(Event @event)
         {
-            throw new NotImplementedException();
+            _dbContext.Entry(@event).State = EntityState.Modified;
+             await _dbContext.SaveChangesAsync();
         }
     }
 }

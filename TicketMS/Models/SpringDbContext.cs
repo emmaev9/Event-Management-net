@@ -29,7 +29,7 @@ public partial class SpringDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=DESKTOP-7K2NNPM;Initial Catalog=springDB;Integrated Security=True;TrustServerCertificate=True;encrypt=false;");
+        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:TicketsDB");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,7 +42,7 @@ public partial class SpringDbContext : DbContext
             entity.HasIndex(e => e.Email, "UK_dwk6cx0afu8bs9o4t536v1j5v").IsUnique();
 
             entity.Property(e => e.Customerid)
-                .ValueGeneratedNever()
+               // .ValueGeneratedNever()
                 .HasColumnName("customerid");
             entity.Property(e => e.Email)
                 .HasMaxLength(255)
@@ -61,7 +61,7 @@ public partial class SpringDbContext : DbContext
             entity.ToTable("event");
 
             entity.Property(e => e.Eventid)
-                .ValueGeneratedNever()
+               // .ValueGeneratedNever()
                 .HasColumnName("eventid");
             entity.Property(e => e.EndDate)
                 .HasPrecision(6)
@@ -96,7 +96,7 @@ public partial class SpringDbContext : DbContext
             entity.ToTable("event_type");
 
             entity.Property(e => e.EventTypeid)
-                .ValueGeneratedNever()
+               // .ValueGeneratedNever()
                 .HasColumnName("event_typeid");
             entity.Property(e => e.Name)
                 .HasMaxLength(255)
@@ -111,7 +111,7 @@ public partial class SpringDbContext : DbContext
             entity.ToTable("orders");
 
             entity.Property(e => e.Orderid)
-                .ValueGeneratedNever()
+              //  .ValueGeneratedNever()
                 .HasColumnName("orderid");
             entity.Property(e => e.Customerid).HasColumnName("customerid");
             entity.Property(e => e.NumberOfTickets).HasColumnName("number_of_tickets");
@@ -137,7 +137,7 @@ public partial class SpringDbContext : DbContext
             entity.ToTable("ticket_category");
 
             entity.Property(e => e.TicketCategoryid)
-                .ValueGeneratedNever()
+               // .ValueGeneratedNever()
                 .HasColumnName("ticket_categoryid");
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
@@ -148,7 +148,9 @@ public partial class SpringDbContext : DbContext
 
             entity.HasOne(d => d.Event).WithMany(p => p.TicketCategories)
                 .HasForeignKey(d => d.Eventid)
-                .HasConstraintName("FKpclsgt6dy7y5r1tuntx9sk2a5");
+                .HasConstraintName("FKpclsgt6dy7y5r1tuntx9sk2a5")
+                .OnDelete(DeleteBehavior.Cascade);
+
         });
 
         modelBuilder.Entity<Venue>(entity =>
@@ -158,7 +160,7 @@ public partial class SpringDbContext : DbContext
             entity.ToTable("venue");
 
             entity.Property(e => e.Venueid)
-                .ValueGeneratedNever()
+            //    .ValueGeneratedNever()
                 .HasColumnName("venueid");
             entity.Property(e => e.Capacity).HasColumnName("capacity");
             entity.Property(e => e.Location)
